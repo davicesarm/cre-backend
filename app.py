@@ -7,7 +7,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 
-
 @app.route("/cursos")
 def get_cursos():
     cursos = Curso.query.all()

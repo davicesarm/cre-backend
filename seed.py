@@ -1,93 +1,70 @@
+from bs4 import BeautifulSoup
+import requests
+from bs4.element import NavigableString
 from models import *
-from app import app 
-from sqlalchemy.exc import IntegrityError
+from app import app
+
+def extrair_e_inserir_dados_url(url):
+    pagina = requests.get(url)
+    soup = BeautifulSoup(pagina.text, 'html.parser')
+    
+    curso_tag = soup.select_one(
+        'html body.tema-verde div.content div.container div.row div#conteudo.col-sm-12.col-md-10.conteudo h2.titulo.azul-petroleo'
+    )
+    if not curso_tag:
+        return
+    
+    curso_nome = curso_tag.get_text(strip=True)
+    
+    curso_obj = Curso.query.filter_by(nome=curso_nome).first()
+    if not curso_obj:
+        curso_obj = Curso(nome=curso_nome)
+        db.session.add(curso_obj)
+        db.session.commit()
+    
+    
+    semestres = soup.select_one('div.corpo:nth-child(3) > div:nth-child(2)')
+    if not semestres:
+        return
+    
+    periodo_num = 1
+    for semestre in semestres:
+        if isinstance(semestre, NavigableString):
+            continue
+        
+        tbody = semestre.find_next('tbody')
+        if not tbody:
+            continue
+        
+        rows = tbody.find_all('tr')
+        for row in rows:
+            cols = row.find_all('td')
+            if len(cols) < 6:
+                continue
+            
+            materia_nome = cols[0].get_text(strip=True)
+            ch = cols[1].get_text(strip=True)
+            try:
+                peso = int(ch)
+            except ValueError:
+                peso = 0
+            
+            materia_obj = Materia.query.filter_by(nome=materia_nome).first()
+            if not materia_obj:
+                materia_obj = Materia(nome=materia_nome)
+                db.session.add(materia_obj)
+                db.session.commit()
+            
+            curso_materia_obj = CursoMateria(
+                peso=peso,
+                periodo=periodo_num,
+                id_curso=curso_obj.id,
+                id_materia=materia_obj.id
+            )
+            db.session.add(curso_materia_obj)
+        periodo_num += 1
+    
+    db.session.commit()
 
 with app.app_context():
-    try:
-        # Criando cursos
-        curso1 = Curso(nome="Sistemas para Internet")
-        curso2 = Curso(nome="Engenharia de Software")
-        db.session.add_all([curso1, curso2])
-        db.session.commit()  
-        print("Cursos inseridos com sucesso!")
-    except IntegrityError:
-        db.session.rollback()
-        print("Erro ao inserir cursos")
-
-    try:
-        # Criando matérias p1
-        subjects_p1 = [
-            Materia(nome="Algoritmo e Programação Estruturada"),
-            Materia(nome="Fundamentos da Computação"),
-            Materia(nome="Fundamentos de Redes de Computadores"),
-            Materia(nome="Linguagens de Marcação"),
-            Materia(nome="Língua Portuguesa"),
-            Materia(nome="Matemática Aplicada a Sistemas para Internet")
-        ]
-        db.session.add_all(subjects_p1)
-        db.session.commit()  
-        print("Matérias P1 inseridas com sucesso!")
-    except IntegrityError:
-        db.session.rollback()
-        print("Erro ao inserir matérias P1")
-
-    try:
-        # Criando matérias p2
-        subjects_p2 = [
-            Materia(nome="Banco de Dados I"),
-            Materia(nome="Ciência, Tecnologia e Meio Ambiente"),
-            Materia(nome="Estrutura de Dados"),
-            Materia(nome="Fundamentos da Metodologia"),
-            Materia(nome="Linguagens de Script"),
-            Materia(nome="Protocolos de Interconexão de Redes de Computadores"),
-            Materia(nome="Sistemas Operacionais")
-        ]
-        db.session.add_all(subjects_p2)
-        db.session.commit()  
-        print("Matérias P2 inseridas com sucesso!")
-    except IntegrityError:
-        db.session.rollback()
-        print("Erro ao inserir matérias P2")
-
-    try:
-        curso1 = Curso.query.filter_by(nome="Sistemas para Internet").first()
-        if not curso1:
-            raise ValueError("Curso 'Sistemas para Internet' não encontrado!")
-
-        subjects = {s.nome: s.id for s in Materia.query.all()}
-
-        relations_p1 = [
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Algoritmo e Programação Estruturada"], peso=100, periodo=1),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Fundamentos da Computação"], peso=60, periodo=1),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Fundamentos de Redes de Computadores"], peso=80, periodo=1),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Linguagens de Marcação"], peso=80, periodo=1),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Língua Portuguesa"], peso=60, periodo=1),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Matemática Aplicada a Sistemas para Internet"], peso=100, periodo=1)
-        ]
-        db.session.add_all(relations_p1)
-        db.session.commit()
-        print("Relações curso-matéria (P1) inseridas com sucesso!")
-    except IntegrityError:
-        db.session.rollback()
-        print("Erro ao inserir relações P1")
-    except ValueError as e:
-        print("Erro:", e)
-
-    try:
-        relations_p2 = [
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Banco de Dados I"], peso=80, periodo=2),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Ciência, Tecnologia e Meio Ambiente"], peso=40, periodo=2),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Estrutura de Dados"], peso=80, periodo=2),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Fundamentos da Metodologia"], peso=40, periodo=2),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Linguagens de Script"], peso=80, periodo=2),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Protocolos de Interconexão de Redes de Computadores"], peso=80, periodo=2),
-            CursoMateria(id_curso=curso1.id, id_materia=subjects["Sistemas Operacionais"], peso=100, periodo=2)
-        ]
-        db.session.add_all(relations_p2)
-        db.session.commit()
-        print("Relações curso-matéria (P2) inseridas com sucesso!")
-    except IntegrityError:
-        db.session.rollback()
-        print("Erro ao inserir relações P2")
-
-    print("Dados inseridos com sucesso!")
+    extrair_e_inserir_dados_url("https://estudante.ifpb.edu.br/cursos/39/")
