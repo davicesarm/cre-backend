@@ -1,15 +1,15 @@
 from . import db
 
 class CursoMateria(db.Model):
-    __tablename__ = "curso_materia"
+    __tablename__ = "cursoMateria"
     peso = db.Column(db.Integer, nullable=False)
     periodo = db.Column(db.Integer, nullable=False)
-    id_curso = db.Column(db.Integer, db.ForeignKey("curso.id"), nullable=False)
-    id_materia = db.Column(db.Integer, db.ForeignKey("materia.id"), nullable=False)
+    fk_idCurso = db.Column(db.Integer, db.ForeignKey("curso.idCurso"), nullable=False)
+    fk_idMateria = db.Column(db.Integer, db.ForeignKey("materia.idMateria"), nullable=False)
 
     __table_args__ = (
-        db.PrimaryKeyConstraint("id_curso", "id_materia"),
+        db.PrimaryKeyConstraint("fk_idCurso", "fk_idMateria"),
     )
 
-    curso = db.relationship("Curso", backref="curso_materia")
-    materia = db.relationship("Materia", backref="curso_materia")
+    curso = db.relationship("Curso", backref="cursoMateria")
+    materia = db.relationship("Materia", backref="cursoMateria")

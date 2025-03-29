@@ -16,9 +16,9 @@ def extrair_e_inserir_dados_url(url):
     
     curso_nome = curso_tag.get_text(strip=True)
     
-    curso_obj = Curso.query.filter_by(nome=curso_nome).first()
+    curso_obj = Curso.query.filter_by(nomeCurso=curso_nome).first()
     if not curso_obj:
-        curso_obj = Curso(nome=curso_nome)
+        curso_obj = Curso(nomeCurso=curso_nome)
         db.session.add(curso_obj)
         db.session.commit()
     
@@ -49,17 +49,17 @@ def extrair_e_inserir_dados_url(url):
             except ValueError:
                 peso = 0
             
-            materia_obj = Materia.query.filter_by(nome=materia_nome).first()
+            materia_obj = Materia.query.filter_by(nomeMateria=materia_nome).first()
             if not materia_obj:
-                materia_obj = Materia(nome=materia_nome)
+                materia_obj = Materia(nomeMateria=materia_nome)
                 db.session.add(materia_obj)
                 db.session.commit()
             
             curso_materia_obj = CursoMateria(
                 peso=peso,
                 periodo=periodo_num,
-                id_curso=curso_obj.id,
-                id_materia=materia_obj.id
+                fk_idCurso=curso_obj.idCurso,
+                fk_idMateria=materia_obj.idMateria
             )
             db.session.add(curso_materia_obj)
         periodo_num += 1

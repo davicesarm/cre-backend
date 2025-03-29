@@ -13,8 +13,8 @@ def get_cursos():
     cursos_dict = {
         "cursos": [
             {
-                "id": curso.id,
-                "nome": curso.nome
+                "id": curso.idCurso,
+                "nome": curso.nomeCurso
             }
             for curso in cursos
         ] 
@@ -35,7 +35,7 @@ def get_curso(id: int):
     
 @app.route("/curso/nome/<string:nome>")
 def find_curso(nome: str):
-    curso = Curso.query.filter(Curso.nome.ilike(nome)).first()
+    curso = Curso.query.filter(Curso.nomeCurso.ilike(nome)).first()
     if not curso:
         return jsonify({"error": "Curso não encontrado"}), 400
     

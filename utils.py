@@ -3,21 +3,21 @@ from models import Curso
 def formatar_curso(curso: Curso) -> dict:
     periodos = {}
 
-    for cm in curso.curso_materia:
+    for cm in curso.cursoMateria:
         periodo = cm.periodo
 
         if periodo not in periodos:
             periodos[periodo] = []
 
         periodos[periodo].append({
-            "id": cm.materia.id,
-            "nome": cm.materia.nome,
+            "id": cm.materia.idMateria,
+            "nome": cm.materia.nomeMateria,
             "peso": cm.peso
         })
     
     curso_dict = {
-        "id": curso.id,
-        "nome": curso.nome,
+        "id": curso.idCurso,
+        "nome": curso.nomeCurso,
         "periodos": [
             {
                 "periodo": periodo,
