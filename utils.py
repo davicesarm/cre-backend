@@ -10,14 +10,17 @@ def formatar_curso(curso: Curso) -> dict:
             periodos[periodo] = []
 
         periodos[periodo].append({
-            "id": cm.materia.idMateria,
-            "nome": cm.materia.nomeMateria,
-            "peso": cm.peso
+            "id_materia": cm.materia.idMateria,
+            "nome_materia": cm.materia.nomeMateria,
+            "ch": cm.ch
         })
     
     curso_dict = {
-        "id": curso.idCurso,
-        "nome": curso.nomeCurso,
+        "id_curso": curso.idCurso,
+        "nome_curso": curso.nomeCurso,
+        "turno": curso.turno,
+        "formacao": curso.formacao,
+        "campus": curso.campus.nomeCampus,
         "periodos": [
             {
                 "periodo": periodo,

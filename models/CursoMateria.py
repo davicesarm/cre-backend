@@ -2,7 +2,7 @@ from . import db
 
 class CursoMateria(db.Model):
     __tablename__ = "cursoMateria"
-    peso = db.Column(db.Integer, nullable=False)
+    ch = db.Column(db.Integer, nullable=False)
     periodo = db.Column(db.Integer, nullable=False)
     fk_idCurso = db.Column(db.Integer, db.ForeignKey("curso.idCurso"), nullable=False)
     fk_idMateria = db.Column(db.Integer, db.ForeignKey("materia.idMateria"), nullable=False)

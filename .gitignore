@@ -3,3 +3,6 @@ venv
 *.sqlite
 __pycache__
 TODO*
+.vscode/
+.idea/
+*.pyc

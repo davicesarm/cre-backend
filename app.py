@@ -1,11 +1,16 @@
-from flask import Flask, jsonify
+from flask_migrate import Migrate
+from flask import Flask, jsonify, request
 from config import Config
 from models import *
 from utils import formatar_curso
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
+migrate = Migrate(app, db)
+
+CORS(app)
 
 @app.route("/cursos")
 def get_cursos():
@@ -13,8 +18,11 @@ def get_cursos():
     cursos_dict = {
         "cursos": [
             {
-                "id": curso.idCurso,
-                "nome": curso.nomeCurso
+                "id_curso": curso.idCurso,
+                "nome_curso": curso.nomeCurso,
+                "turno": curso.turno,
+                "formacao": curso.formacao,
+                "campus": curso.campus.nomeCampus,
             }
             for curso in cursos
         ] 
@@ -32,16 +40,33 @@ def get_curso(id: int):
     
     return jsonify(curso_dict)
     
-    
+
 @app.route("/curso/nome/<string:nome>")
-def find_curso(nome: str):
-    curso = Curso.query.filter(Curso.nomeCurso.ilike(nome)).first()
-    if not curso:
+def find_cursos(nome: str):
+    turno = request.args.get('turno')
+    formacao = request.args.get('formacao')
+    campus = request.args.get('campus')
+    
+    cursos = Curso.query.filter(Curso.nomeCurso.ilike(nome))
+    
+    if turno:
+        cursos = cursos.filter(Curso.turno.ilike(f"%{turno}"))
+    if formacao:
+        cursos = cursos.filter(Curso.formacao.ilike(formacao))
+    if campus:
+        cursos = cursos.filter(Campus.nomeCampus.ilike(f"%{campus}"))
+    
+    if not cursos.all():
         return jsonify({"error": "Curso não encontrado"}), 400
     
-    curso_dict = formatar_curso(curso)
+    cursos_dict = {
+        "cursos": [
+            formatar_curso(curso)
+            for curso in cursos
+        ] 
+    }
     
-    return jsonify(curso_dict)
+    return jsonify(cursos_dict)
     
     
 if __name__ == '__main__':
