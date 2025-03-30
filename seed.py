@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 from bs4.element import NavigableString
 from models import *
-from app import app
 
 
 def extrair_e_inserir_dados_url(url):
@@ -92,6 +91,9 @@ def extrair_e_inserir_dados_url(url):
                     fk_idMateria=materia_obj.idMateria
                 )
                 db.session.add(curso_materia_obj)
+            else:
+                curso_materia_obj.ch = ch
+                curso_materia_obj.periodo = periodo_num
         
         periodo_num += 1
     db.session.commit()
@@ -111,8 +113,3 @@ def pegar_links_cursos_disponiveis() -> list[str]:
                 links.add(f"https://estudante.ifpb.edu.br{href}")
 
     return list(links)
-
-with app.app_context():
-    for curso in pegar_links_cursos_disponiveis():
-        extrair_e_inserir_dados_url(curso)
-    

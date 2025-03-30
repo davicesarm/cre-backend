@@ -4,6 +4,9 @@ from config import Config
 from models import *
 from utils import formatar_curso
 from flask_cors import CORS
+from seed import *
+import threading
+import time
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -34,7 +37,7 @@ def get_cursos():
 def get_curso(id: int):
     curso = Curso.query.get(id)
     if not curso:
-        return jsonify({"error": "Curso não encontrado"}), 400
+        return jsonify({"error": "Curso não encontrado"}), 404
     
     curso_dict = formatar_curso(curso)
     
@@ -57,7 +60,7 @@ def find_cursos(nome: str):
         cursos = cursos.filter(Campus.nomeCampus.ilike(f"%{campus}"))
     
     if not cursos.all():
-        return jsonify({"error": "Curso não encontrado"}), 400
+        return jsonify({"error": "Curso não encontrado"}), 404
     
     cursos_dict = {
         "cursos": [
@@ -68,8 +71,25 @@ def find_cursos(nome: str):
     
     return jsonify(cursos_dict)
     
+
+def popular_banco():
+    while True:
+        with app.app_context():
+            links = pegar_links_cursos_disponiveis()
+            for curso in links:
+                extrair_e_inserir_dados_url(curso)
+
+        time.sleep(7 * 24 * 60 * 60)
+    """ 
+    OBS: Talvez seja necessário mudar essa implementeçao,
+    usar algo mais robusto...
+    Deixarei assim por enquanto porque funciona.
+    """
     
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+   
+    threading.Thread(target=popular_banco, daemon=True).start()
+        
     app.run(debug=True)
