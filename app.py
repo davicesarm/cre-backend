@@ -86,10 +86,10 @@ def popular_banco():
     Deixarei assim por enquanto porque funciona.
     """
     
+with app.app_context():
+    db.create_all()
+
+threading.Thread(target=popular_banco, daemon=True).start()
+    
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-   
-    threading.Thread(target=popular_banco, daemon=True).start()
-        
     app.run(debug=True)
