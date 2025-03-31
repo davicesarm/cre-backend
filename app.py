@@ -1,4 +1,3 @@
-from flask_migrate import Migrate
 from flask import Flask, jsonify, request
 from config import Config
 from models import *
@@ -11,7 +10,6 @@ import time
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
-migrate = Migrate(app, db)
 
 CORS(app)
 
@@ -35,7 +33,7 @@ def get_cursos():
 
 @app.route("/curso/id/<int:id>")
 def get_curso(id: int):
-    curso = Curso.query.get(id)
+    curso = db.session.get(Curso, id)
     if not curso:
         return jsonify({"error": "Curso não encontrado"}), 404
     
@@ -53,11 +51,11 @@ def find_cursos(nome: str):
     cursos = Curso.query.filter(Curso.nomeCurso.ilike(nome))
     
     if turno:
-        cursos = cursos.filter(Curso.turno.ilike(f"%{turno}"))
+        cursos = cursos.filter(Curso.turno.ilike(f"%{turno}%"))
     if formacao:
-        cursos = cursos.filter(Curso.formacao.ilike(formacao))
+        cursos = cursos.filter(Curso.formacao.ilike(f"%{formacao}%"))
     if campus:
-        cursos = cursos.filter(Campus.nomeCampus.ilike(f"%{campus}"))
+        cursos = cursos.join(Campus).filter(Campus.nomeCampus.ilike(f"%{campus}%"))
     
     if not cursos.all():
         return jsonify({"error": "Curso não encontrado"}), 404
@@ -74,12 +72,16 @@ def find_cursos(nome: str):
 
 def popular_banco():
     while True:
+        print("Iniciando atualização dos dados...")
         with app.app_context():
             links = pegar_links_cursos_disponiveis()
             for curso in links:
                 extrair_e_inserir_dados_url(curso)
 
-        time.sleep(7 * 24 * 60 * 60)
+        print("Dados atualizados com sucesso!")
+        for i in range(7, 0, -1):
+            print(f"Os dados serão atualizados em {i} dias.")
+            time.sleep(24 * 60 * 60)
     """ 
     OBS: Talvez seja necessário mudar essa implementeçao,
     usar algo mais robusto...
