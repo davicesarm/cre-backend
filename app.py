@@ -72,7 +72,8 @@ def find_cursos(nome: str):
 
 
 class AtualizadorBanco:
-    def __init__(self):
+    def __init__(self, intervalo_dias=7):
+        self.intervalo = timedelta(days=intervalo_dias)
         self.proxima_atualizacao = datetime.now() + self.intervalo
         self.scheduler = BackgroundScheduler()
 
@@ -93,7 +94,7 @@ class AtualizadorBanco:
             print("[DADOS] A atualização ocorre hoje!")
 
     def iniciar_scheduler(self):
-        self.scheduler.add_job(self.atualizar_dados, 'cron', day_of_week='fri', hour=0, minute=0, misfire_grace_time=60)
+        self.scheduler.add_job(self.atualizar_dados, 'inverval', seconds=self.intervalo.total_seconds(), misfire_grace_time=60)
         self.scheduler.add_job(self.mensagem_diaria, 'cron', hour=12, minute=0, misfire_grace_time=60)
         self.scheduler.start()
 
@@ -102,6 +103,7 @@ with app.app_context():
     db.create_all()
 
 atualizador = AtualizadorBanco()
+atualizador.atualizar_dados()
 atualizador.iniciar_scheduler()
 
 if __name__ == '__main__':
