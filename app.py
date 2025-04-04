@@ -4,8 +4,8 @@ from models import *
 from utils import formatar_curso
 from flask_cors import CORS
 from seed import *
-import threading
-import time
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -68,30 +68,41 @@ def find_cursos(nome: str):
     }
     
     return jsonify(cursos_dict)
-    
 
-def popular_banco():
-    while True:
-        print("Iniciando atualização dos dados...")
+
+
+class AtualizadorBanco:
+    def __init__(self):
+        self.proxima_atualizacao = datetime.now() + self.intervalo
+        self.scheduler = BackgroundScheduler()
+
+    def atualizar_dados(self):
+        print("[DADOS] Iniciando atualização dos dados...")
         with app.app_context():
             links = pegar_links_cursos_disponiveis()
             for curso in links:
                 extrair_e_inserir_dados_url(curso)
+        self.proxima_atualizacao = datetime.now() + self.intervalo
+        print("[DADOS] Dados atualizados com sucesso!")
 
-        print("Dados atualizados com sucesso!")
-        for i in range(7, 0, -1):
-            print(f"Os dados serão atualizados em {i} dias.")
-            time.sleep(24 * 60 * 60)
-    """ 
-    OBS: Talvez seja necessário mudar essa implementeçao,
-    usar algo mais robusto...
-    Deixarei assim por enquanto porque funciona.
-    """
+    def mensagem_diaria(self):
+        dias = (self.proxima_atualizacao - datetime.now()).days
+        if dias > 0:
+            print(f"[DADOS] Próxima atualização em {dias} dias.")
+        else:
+            print("[DADOS] A atualização ocorre hoje!")
+
+    def iniciar_scheduler(self):
+        self.scheduler.add_job(self.atualizar_dados, 'cron', day_of_week='fri', hour=0, minute=0, misfire_grace_time=60)
+        self.scheduler.add_job(self.mensagem_diaria, 'cron', hour=12, minute=0, misfire_grace_time=60)
+        self.scheduler.start()
+
     
 with app.app_context():
     db.create_all()
 
-threading.Thread(target=popular_banco, daemon=True).start()
-    
+atualizador = AtualizadorBanco()
+atualizador.iniciar_scheduler()
+
 if __name__ == '__main__':
     app.run(debug=True)
