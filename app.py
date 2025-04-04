@@ -1,15 +1,37 @@
 from flask import Flask, jsonify, request
 from config import Config
 from models import *
+from seed import *
 from utils import formatar_curso
 from flask_cors import CORS
-
+import threading
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 
 CORS(app)
+
+UPDATE_SECRET = os.getenv("UPDATE_SECRET")
+
+def tarefa_atualizacao():
+    print("[DADOS] Iniciando atualização dos dados...")
+    with app.app_context():
+        links = pegar_links_cursos_disponiveis()
+        for curso in links:
+            extrair_e_inserir_dados_url(curso)
+    print("[DADOS] Dados atualizados com sucesso!")
+
+@app.route("/atualizar", methods=["POST"])
+def atualizar_manual():
+    token = request.headers.get("Authorization")
+    if token != f"Bearer {UPDATE_SECRET}":
+        return jsonify({"error": "Não autorizado"}), 403
+
+    threading.Thread(target=tarefa_atualizacao, daemon=True).start()
+
+    return jsonify({"message": "Dados atualizados com sucesso!"})
 
 
 @app.route("/cursos")
