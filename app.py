@@ -94,7 +94,7 @@ class AtualizadorBanco:
             print("[DADOS] A atualização ocorre hoje!")
 
     def iniciar_scheduler(self):
-        self.scheduler.add_job(self.atualizar_dados, 'inverval', seconds=self.intervalo.total_seconds(), misfire_grace_time=60)
+        self.scheduler.add_job(self.atualizar_dados, 'interval', seconds=self.intervalo.total_seconds(), misfire_grace_time=60)
         self.scheduler.add_job(self.mensagem_diaria, 'cron', hour=12, minute=0, misfire_grace_time=60)
         self.scheduler.start()
 
