@@ -1,5 +1,6 @@
 from models import Curso
 
+
 def formatar_curso(curso: Curso) -> dict:
     periodos = {}
 

@@ -3,7 +3,6 @@ import requests
 from bs4.element import NavigableString
 from models import *
 
-
 def extrair_e_inserir_dados_url(url):
     pagina = requests.get(url)
     soup = BeautifulSoup(pagina.text, 'html.parser')
@@ -28,7 +27,6 @@ def extrair_e_inserir_dados_url(url):
         db.session.add(campus_obj)
         db.session.commit()
     
-    
     curso_obj = Curso.query.filter_by(
         nomeCurso=curso_nome,
         turno=turno_nome,
@@ -45,7 +43,6 @@ def extrair_e_inserir_dados_url(url):
         )
         db.session.add(curso_obj)
         db.session.commit()
-    
     
     semestres = soup.select_one('div.corpo:nth-child(3) > div:nth-child(2)')
     if not semestres:
@@ -97,6 +94,7 @@ def extrair_e_inserir_dados_url(url):
         
         periodo_num += 1
     db.session.commit()
+
 
 def pegar_links_cursos_disponiveis() -> list[str]:
     pagina = requests.get("https://estudante.ifpb.edu.br/cursos/")
