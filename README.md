@@ -10,5 +10,4 @@ Este é o repositório do backend da **Calculadora de CRE**, desenvolvido em **F
 ## 🔧 Tecnologias
 - **Flask**
 - **BeautifulSoup** (para web scraping)
-- **SQLite** (para armazenamento de dados)
-- **Flask-CORS** (para permitir chamadas do frontend)
+- **PostgreSQL** (para armazenamento de dados)
